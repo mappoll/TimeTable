@@ -1,0 +1,313 @@
+/* =========================================================
+   全体
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.transfer-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 8px 0;
+    padding: 8px 10px;
+    border: 1px solid #b22222;
+    border-radius: 4px;
+    background: #fff6f6;
+}
+
+.transfer-panel button {
+    min-height: 30px;
+}
+
+.diagram-transfer-line {
+    stroke: #c62828;
+    stroke-width: 3;
+    pointer-events: none;
+}
+
+.diagram-train-line.is-transfer {
+    stroke-width: 3;
+    opacity: 1;
+}
+
+.diagram-stop-box.is-transfer {
+    opacity: 1;
+}
+
+.diagram-stop-box.is-transfer-stop .diagram-stop-rect {
+    stroke: #c62828;
+    stroke-width: 3;
+    fill: #fff0f0;
+}
+
+body {
+    margin: 16px;
+    font-family: sans-serif;
+}
+
+
+/* エラーメッセージ */
+.error-message {
+    color: #b22222;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   ダイヤグラム操作
+   ========================================================= */
+
+.diagram-zoom-controls {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 8px;
+}
+
+.diagram-zoom-controls button {
+    min-width: 36px;
+    min-height: 32px;
+}
+
+#zoom-label {
+    min-width: 48px;
+
+    text-align: center;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+   ダイヤグラム全体
+   ========================================================= */
+
+.new-diagram-scroll {
+    width: 100%;
+
+    overflow-x: auto;
+    overflow-y: auto;
+
+    border: 1px solid #ccc;
+
+    background: white;
+}
+
+.new-diagram {
+    display: block;
+}
+
+
+/* =========================================================
+   横軸：時間
+   ========================================================= */
+
+/* 5分刻みの縦線 */
+.diagram-time-grid {
+    stroke: #ddd;
+    stroke-width: 1;
+
+    stroke-dasharray: 4 4;
+}
+
+
+/* 上部の時刻 */
+.diagram-time-label {
+    font-size: 10px;
+
+    fill: #555;
+}
+
+
+/* =========================================================
+   縦軸：駅
+   ========================================================= */
+
+/* 駅を表す横線 */
+.diagram-station-line {
+    stroke: #bbb;
+    stroke-width: 1;
+}
+
+
+/* 左側の駅名 */
+.diagram-station-name {
+    font-size: 11px;
+    font-weight: bold;
+
+    fill: #222;
+}
+
+
+/* =========================================================
+   列車の線
+   ========================================================= */
+
+.diagram-train-line {
+    fill: none;
+
+    stroke-width: 2;
+}
+
+
+/* 普通 */
+.train-local {
+    stroke: #666666;
+}
+
+
+/* 快速 */
+.train-rapid {
+    stroke: #2f6fed;
+}
+
+
+/* 新快速 */
+.train-special-rapid {
+    stroke: #1f9d55;
+}
+
+
+/* 想定外の列車種別 */
+.train-default {
+    stroke: #444444;
+}
+
+
+/* =========================================================
+   駅情報ボックス
+   ========================================================= */
+
+/*
+ * 箱自体の大きさはHTML側で指定。
+ *
+ * 現在：
+ * width  = 50px
+ * height = 38px
+ */
+.diagram-stop-rect {
+    fill: white;
+
+    stroke-width: 1.5;
+}
+
+
+/* 箱中央の駅名 */
+.diagram-stop-station {
+    font-size: 9px;
+    font-weight: bold;
+
+    fill: #222;
+}
+
+
+/* 箱上部の到着時刻 */
+.diagram-stop-arrival {
+    font-size: 8px;
+
+    fill: #222;
+}
+
+
+/* 箱下部の発車時刻 */
+.diagram-stop-departure {
+    font-size: 8px;
+
+    fill: #222;
+}
+
+.diagram-stop-leader {
+    stroke: #999;
+    stroke-width: 1;
+}
+
+
+/* =========================================================
+   希望到着時刻
+   ========================================================= */
+
+/* 希望到着時刻の縦線 */
+.diagram-target-line {
+    stroke: #d46a6a;
+    stroke-width: 2;
+
+    stroke-dasharray: 7 5;
+}
+
+
+/* 希望到着時刻の文字 */
+.diagram-target-label {
+    font-size: 10px;
+    font-weight: bold;
+
+    fill: #b22222;
+}
+
+/* =========================================================
+   乗車中の列車選択
+   ========================================================= */
+
+.selected-train-panel {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 8px 0;
+
+    padding: 8px 10px;
+
+    border: 1px solid #bbb;
+    border-radius: 4px;
+
+    background: #fff;
+}
+
+
+.selected-train-panel button {
+    min-height: 30px;
+}
+
+
+/* 線と箱を選択可能にする */
+.diagram-train-line,
+.diagram-stop-box {
+    cursor: pointer;
+}
+
+
+/* 選択していない列車 */
+.diagram-train-line.is-dimmed {
+    opacity: 0.20;
+}
+
+.diagram-stop-box.is-dimmed {
+    opacity: 0.30;
+}
+
+
+/* 選択中の列車線 */
+.diagram-train-line.is-selected {
+    stroke-width: 4;
+    opacity: 1;
+}
+
+
+/* 選択中の駅箱 */
+.diagram-stop-box.is-selected {
+    opacity: 1;
+}
+
+
+/* 選択中の箱の枠 */
+.diagram-stop-box.is-selected .diagram-stop-rect {
+    stroke-width: 3;
+}
