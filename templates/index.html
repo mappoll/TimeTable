@@ -1,3 +1,4 @@
+{% set LEFT_AXIS_WIDTH = 48 %}
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -18,7 +19,7 @@
 </head>
 
 
-<body data-request-method="{{ request.method }}" data-has-diagram="{{ 'true' if selected_trains else 'false' }}">
+<body style="--left-axis-width: {{ LEFT_AXIS_WIDTH }}px" data-request-method="{{ request.method }}" data-has-diagram="{{ 'true' if selected_trains else 'false' }}">
     <main class="diagram-viewport" aria-label="{{ '希望到着' if direction == 'outbound' else '希望出発' }} {{ target_time }}">
     {% if selected_trains %}
         <div class="new-diagram-scroll" tabindex="0" aria-label="ダイヤをスクロール">
@@ -26,16 +27,17 @@
                     id="timetable-diagram"
                     class="new-diagram"
 
-                    width="{{ diagram_width + 104 }}"
+                    width="{{ diagram_width + LEFT_AXIS_WIDTH + 40 }}"
                     height="{{ diagram_height }}"
 
                     viewBox="
                         0
                         0
-                        {{ diagram_width + 104 }}
+                        {{ diagram_width + LEFT_AXIS_WIDTH + 40 }}
                         {{ diagram_height }}
                     "
 
+                    data-left-axis-width="{{ LEFT_AXIS_WIDTH }}"
                     data-diagram-width="{{ diagram_width }}"
                     data-top-margin="{{ diagram_top_margin }}"
                     data-station-spacing="{{ diagram_station_spacing }}"
@@ -49,7 +51,7 @@
                     {% for tick in time_ticks %}
 
                         {% set tick_x =
-                            64
+                            LEFT_AXIS_WIDTH
                             + (tick.minutes - diagram_start_minutes)
                             * diagram_pixels_per_minute
                         %}
@@ -95,10 +97,10 @@
                         %}
 
                         <line
-                            x1="64"
+                            x1="{{ LEFT_AXIS_WIDTH }}"
                             y1="{{ station_y }}"
 
-                            x2="{{ 64 + diagram_width }}"
+                            x2="{{ LEFT_AXIS_WIDTH + diagram_width }}"
                             y2="{{ station_y }}"
 
                             data-base-y="{{ station_y }}"
@@ -108,7 +110,7 @@
 
 
                         <text
-                            x="54"
+                            x="{{ LEFT_AXIS_WIDTH - 5 }}"
                             y="{{ station_y + 4 }}"
 
                             data-base-y="{{ station_y }}"
@@ -130,7 +132,7 @@
                           and diagram_target_x is not none %}
 
                         {% set target_x =
-                            diagram_target_x + 64
+                            diagram_target_x + LEFT_AXIS_WIDTH
                         %}
 
                         <line
@@ -194,11 +196,11 @@
                             <polyline
                                 points="
                                     {% for point in train.points %}
-                                        {{ point.x + 64 }},{{ point.y }}
+                                        {{ point.x + LEFT_AXIS_WIDTH }},{{ point.y }}
                                     {% endfor %}
                                 "
 
-                                data-base-points="{% for point in train.points %}{{ point.x + 64 }},{{ point.y }}{% if not loop.last %} {% endif %}{% endfor %}"
+                                data-base-points="{% for point in train.points %}{{ point.x + LEFT_AXIS_WIDTH }},{{ point.y }}{% if not loop.last %} {% endif %}{% endfor %}"
 
                                 data-train-index="{{ train_index }}"
                                 data-train-type="{{ train.train_type }}"
@@ -253,7 +255,7 @@
                                 data-train-type="{{ train.train_type }}"
                                 data-kobe-time="{{ train.kobe_time }}"
 
-                                data-base-x="{{ stop.x + 64 }}"
+                                data-base-x="{{ stop.x + LEFT_AXIS_WIDTH }}"
                                 data-station="{{ stop.station }}"
                                 data-arrival="{{ stop.arrival }}"
                                 data-departure="{{ stop.departure }}"
@@ -262,7 +264,7 @@
 
                                 transform="
                                     translate(
-                                        {{ stop.x + 64 }}
+                                        {{ stop.x + LEFT_AXIS_WIDTH }}
                                         {{ stop.y + (stop.offset_y or 0) }}
                                     )
                                 "

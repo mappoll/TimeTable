@@ -42,7 +42,7 @@
                     );
 
 
-                const leftMargin = 64;
+                const leftMargin = Number(svg.dataset.leftAxisWidth);
 
 
                 const diagramWidth =
@@ -108,7 +108,7 @@
                 function updateDiagram() {
 
                     const newWidth =
-                        104
+                        (leftMargin + 40)
                         + diagramWidth
                         * zoom;
 

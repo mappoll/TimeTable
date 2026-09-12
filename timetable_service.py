@@ -440,57 +440,30 @@ def build_train_lane(
 
     return lane
 
-def stack_overlapping_stops(diagram_trains, stack_step=34):
-    """
-    同じ駅・同じ時刻の stop が重なる場合、
-    縦方向に少しずらして表示するための offset_y を付ける。
-
-    判定ルール：
-    - arrival があれば arrival を優先
-    - arrival が無ければ departure を使う
-    """
-
-    # まず全stopに offset_y = 0 を入れておく
+def stack_overlapping_stops(diagram_trains, stack_step=34, box_width=34):
+    """同じ駅で横領域が重なる箱を、駅の基準線の上下に並べる。"""
+    station_groups = {}
     for train in diagram_trains:
         for stop in train["stops"]:
             stop["offset_y"] = 0
+            station_groups.setdefault(stop["station"], []).append(stop)
 
-    grouped = {}
+    def apply_offsets(group):
+        start = -((len(group) - 1) / 2) * stack_step
+        for index, stop in enumerate(group):
+            stop["offset_y"] = int(start + index * stack_step)
 
-    # 同じ駅・同じ時刻でグループ化
-    for train_index, train in enumerate(diagram_trains):
-        for stop_index, stop in enumerate(train["stops"]):
-            compare_time = stop.get("arrival") or stop.get("departure")
-
-            if not compare_time:
-                continue
-
-            key = (stop["station"], compare_time)
-
-            grouped.setdefault(key, []).append({
-                "train_index": train_index,
-                "stop_index": stop_index,
-                "stop": stop,
-            })
-
-    # 重なるグループだけ縦に並べる
-    for items in grouped.values():
-        if len(items) <= 1:
-            continue
-
-        # 左から右の順に並べる
-        items.sort(key=lambda item: item["train_index"])
-
-        count = len(items)
-
-        # 例:
-        # 2個 -> [-17, 17]
-        # 3個 -> [-34, 0, 34]
-        # 4個 -> [-51, -17, 17, 51]
-        start = -((count - 1) / 2) * stack_step
-
-        for i, item in enumerate(items):
-            offset_y = int(start + i * stack_step)
-            item["stop"]["offset_y"] = offset_y
+    for stops in station_groups.values():
+        # 安定ソートにより同じxの箱は元の列車順を保つ。
+        ordered = sorted(stops, key=lambda stop: stop["x"])
+        group = []
+        for stop in ordered:
+            # 端が接するだけ（差 == box_width）の箱は別グループ。
+            # 直前の箱との重なりを使い、連続する重なりをまとめる。
+            if group and stop["x"] - group[-1]["x"] >= box_width:
+                apply_offsets(group)
+                group = []
+            group.append(stop)
+        apply_offsets(group)
 
     return diagram_trains
