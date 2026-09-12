@@ -366,7 +366,13 @@
         <div class="axis-corner" aria-hidden="true"></div>
     {% endif %}
     </main>
-    <button id="menu-button" type="button" aria-label="メニューを開く" aria-controls="control-sheet" aria-expanded="false">☰</button>
+    <div class="floating-controls" role="group" aria-label="ダイヤ操作">
+        <button type="button" id="zoom-out" aria-label="縮小" {% if not selected_trains %}disabled{% endif %}>－</button>
+        <span id="zoom-label" aria-live="polite">100%</span>
+        <button type="button" id="zoom-in" aria-label="拡大" {% if not selected_trains %}disabled{% endif %}>＋</button>
+        <button type="button" id="selection-reset" aria-label="列車選択と乗換候補をリセット" title="列車選択を解除" {% if not selected_trains %}disabled{% endif %}>リセット</button>
+        <button id="menu-button" type="button" aria-label="メニューを開く" aria-controls="control-sheet" aria-expanded="false">☰</button>
+    </div>
     <dialog id="control-sheet" aria-label="ダイヤの操作">
         <div class="sheet-heading"><span>ダイヤ</span><button id="close-sheet" type="button" aria-label="閉じる">×</button></div>
         <form method="POST" id="search-form">
@@ -380,12 +386,6 @@
             {% if error_message %}<p class="error-message" role="alert">{{ error_message }}</p>{% endif %}
             <button class="search-button" type="submit">ダイヤを表示</button>
         </form>
-        <div class="diagram-zoom-controls" aria-label="ズーム">
-            <button type="button" id="zoom-out" aria-label="縮小" {% if not selected_trains %}disabled{% endif %}>－</button>
-            <span id="zoom-label">100%</span>
-            <button type="button" id="zoom-in" aria-label="拡大" {% if not selected_trains %}disabled{% endif %}>＋</button>
-            <button type="button" id="zoom-reset" {% if not selected_trains %}disabled{% endif %}>リセット</button>
-        </div>
     </dialog>
     <script src="{{ url_for('static', filename='controls.js') }}"></script>
     <script src="{{ url_for('static', filename='diagram.js') }}"></script>

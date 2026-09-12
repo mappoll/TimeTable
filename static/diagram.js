@@ -36,9 +36,9 @@
                         "zoom-out"
                     );
 
-                const zoomResetButton =
+                const selectionResetButton =
                     document.getElementById(
-                        "zoom-reset"
+                        "selection-reset"
                     );
 
 
@@ -424,13 +424,11 @@
 
 
 
-                zoomResetButton.addEventListener(
+                selectionResetButton.addEventListener(
                     "click",
                     function () {
 
-                        zoom = 1.0;
-
-                        updateDiagram();
+                        clearSelectedTrain();
                     }
                 );
 

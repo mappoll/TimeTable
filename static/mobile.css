@@ -10,7 +10,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid #2f6fed; outline-
 #fixed-time-axis { top: env(safe-area-inset-top); left: 0; width: 100%; height: 30px; z-index: 3; border-bottom: 1px solid #ddd; }
 #fixed-station-axis { top: env(safe-area-inset-top); left: 0; width: 64px; height: calc(100% - env(safe-area-inset-top)); z-index: 2; border-right: 1px solid #ddd; }
 .axis-corner { position: absolute; top: env(safe-area-inset-top); left: 0; width: 64px; height: 30px; background: white; z-index: 4; }
-#menu-button { position: fixed; right: calc(16px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 5; width: 56px; height: 56px; border: 0; border-radius: 50%; background: #202c3b; color: white; font-size: 24px; box-shadow: 0 3px 14px #0003; }
+#menu-button { flex: 0 0 44px; background: #202c3b; color: white; font-size: 22px; }
 #control-sheet { position: fixed; inset: auto 0 0; margin: 0; width: 100%; max-width: none; max-height: 85vh; max-height: 85dvh; overflow-y: auto; padding: 12px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); border: 0; border-radius: 20px 20px 0 0; background: #f8fafc; color: #202c3b; box-shadow: 0 -6px 30px #0002; }
 #control-sheet::backdrop { background: #15202d66; }
 .sheet-heading { display: flex; align-items: center; justify-content: space-between; font-weight: 700; margin-bottom: 8px; }
@@ -24,7 +24,10 @@ button:focus-visible, input:focus-visible { outline: 3px solid #2f6fed; outline-
 .time-field { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 #target_time { box-sizing: border-box; min-width: 0; width: 160px; min-height: 48px; border: 1px solid #bac4d0; border-radius: 10px; background: white; padding: 8px 12px; font-size: 20px; }
 .search-button { width: 100%; margin: 16px 0; border: 0; border-radius: 12px; background: #202c3b; color: white; font-weight: 700; min-height: 48px; }
-.diagram-zoom-controls { display: flex; gap: 8px; margin: 0; }
-.diagram-zoom-controls button { min-height: 44px; flex: 1; border: 1px solid #bac4d0; border-radius: 10px; background: white; }
-.diagram-zoom-controls button:disabled { opacity: .4; }
 #zoom-label { font-variant-numeric: tabular-nums; }
+.floating-controls { position: fixed; z-index: 5; bottom: calc(8px + env(safe-area-inset-bottom)); left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); max-width: 430px; margin-inline: auto; display: flex; align-items: center; gap: 6px; padding: 8px; border: 1px solid #d0d8e0; border-radius: 16px; background: #f8fafcf5; box-shadow: 0 3px 16px #0003; }
+.floating-controls button { min-width: 44px; min-height: 44px; padding: 6px; border: 1px solid #bac4d0; border-radius: 10px; background: white; }
+.floating-controls button:disabled { opacity: .4; }
+.floating-controls #zoom-label { min-width: 48px; text-align: center; font-size: 14px; font-weight: 700; }
+#selection-reset { flex: 1; white-space: nowrap; font-size: 14px; }
+.new-diagram-scroll { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
