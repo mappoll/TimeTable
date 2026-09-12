@@ -33,7 +33,7 @@ class ReturnDiagramTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn('id="timetable-diagram"', html)
         self.assertIn("希望出発 18:00", html)
-        self.assertIn('data-base-x="100"', html)
+        self.assertIn('data-base-x="64"', html)
         self.assertLess(html.index('data-station="神戸"'), html.index('data-station="茨木"'))
 
     def test_real_data_evening_midnight_and_outbound_render(self):

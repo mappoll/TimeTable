@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     >
 
     <title>TimeTable</title>
@@ -14,178 +14,25 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
+<link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
 </head>
 
 
-<body>
-
-    <h1>TimeTable</h1>
-
-
-    <!-- =========================
-         検索フォーム
-         ========================= -->
-    <form method="POST">
-
-        <div>
-
-            <label>
-                <input
-                    type="radio"
-                    name="direction"
-                    value="outbound"
-                    {% if direction == "outbound" %}checked{% endif %}
-                >
-                行き
-            </label>
-
-            <label>
-                <input
-                    type="radio"
-                    name="direction"
-                    value="return"
-                    {% if direction == "return" %}checked{% endif %}
-                >
-                帰り
-            </label>
-
-        </div>
-
-
-        <br>
-
-
-        <div>
-
-            <label for="target_time">
-                指定時刻
-            </label>
-
-            <input
-                type="time"
-                id="target_time"
-                name="target_time"
-                value="{{ target_time }}"
-                required
-            >
-
-        </div>
-
-
-        <br>
-
-
-        <button type="submit">
-            表示
-        </button>
-
-    </form>
-
-
-    <!-- =========================
-         エラー
-         ========================= -->
-    {% if error_message %}
-
-        <p class="error-message">
-            {{ error_message }}
-        </p>
-
-    {% endif %}
-
-
-    <!-- =========================
-         検索結果
-         ========================= -->
+<body data-request-method="{{ request.method }}" data-has-diagram="{{ 'true' if selected_trains else 'false' }}">
+    <main class="diagram-viewport" aria-label="{{ '希望到着' if direction == 'outbound' else '希望出発' }} {{ target_time }}">
     {% if selected_trains %}
-
-        <hr>
-
-
-        <h2>
-                {{ "希望到着" if direction == "outbound" else "希望出発" }} {{ target_time }}
-            </h2>
-
-
-            <!-- =========================
-                 ズーム操作
-                 ========================= -->
-            <div class="diagram-zoom-controls">
-
-                <button
-                    type="button"
-                    id="zoom-out"
-                >
-                    －
-                </button>
-
-                <span id="zoom-label">
-                    100%
-                </span>
-
-                <button
-                    type="button"
-                    id="zoom-in"
-                >
-                    ＋
-                </button>
-
-                <button
-                    type="button"
-                    id="zoom-reset"
-                >
-                    リセット
-                </button>
-
-            </div>
-
-
-            <!-- =========================
-                 乗車中表示
-                 ========================= -->
-            <div
-                id="selected-train-panel"
-                class="selected-train-panel"
-                hidden
-            >
-
-                <span>
-                    乗車中：
-                    <strong id="selected-train-text"></strong>
-                </span>
-
-                <button
-                    type="button"
-                    id="clear-selected-train"
-                >
-                    選択解除
-                </button>
-
-            </div>
-
-
-            <!-- =========================
-                 ダイヤグラム
-                 ========================= -->
-            <p>列車の線または駅箱で乗車中の列車を選び、別列車の駅箱で乗換候補を選択できます。</p>
-            <div id="transfer-panel" class="transfer-panel" hidden aria-live="polite">
-                <span>乗換候補：<strong id="transfer-text"></strong></span>
-                <button type="button" id="clear-transfer">乗換解除</button>
-            </div>
-            <p id="transfer-message" role="status"></p>
-            <div class="new-diagram-scroll">
-
+        <div class="new-diagram-scroll" tabindex="0" aria-label="ダイヤをスクロール">
                 <svg
                     id="timetable-diagram"
                     class="new-diagram"
 
-                    width="{{ diagram_width + 140 }}"
+                    width="{{ diagram_width + 104 }}"
                     height="{{ diagram_height }}"
 
                     viewBox="
                         0
                         0
-                        {{ diagram_width + 140 }}
+                        {{ diagram_width + 104 }}
                         {{ diagram_height }}
                     "
 
@@ -202,7 +49,7 @@
                     {% for tick in time_ticks %}
 
                         {% set tick_x =
-                            100
+                            64
                             + (tick.minutes - diagram_start_minutes)
                             * diagram_pixels_per_minute
                         %}
@@ -248,10 +95,10 @@
                         %}
 
                         <line
-                            x1="100"
+                            x1="64"
                             y1="{{ station_y }}"
 
-                            x2="{{ 100 + diagram_width }}"
+                            x2="{{ 64 + diagram_width }}"
                             y2="{{ station_y }}"
 
                             data-base-y="{{ station_y }}"
@@ -261,7 +108,7 @@
 
 
                         <text
-                            x="90"
+                            x="54"
                             y="{{ station_y + 4 }}"
 
                             data-base-y="{{ station_y }}"
@@ -279,11 +126,11 @@
                     <!-- =========================
                          希望到着時刻
                          ========================= -->
-                    {% if diagram_target_x is defined
+                    {% if direction == "outbound" and diagram_target_x is defined
                           and diagram_target_x is not none %}
 
                         {% set target_x =
-                            diagram_target_x + 100
+                            diagram_target_x + 64
                         %}
 
                         <line
@@ -347,11 +194,11 @@
                             <polyline
                                 points="
                                     {% for point in train.points %}
-                                        {{ point.x + 100 }},{{ point.y }}
+                                        {{ point.x + 64 }},{{ point.y }}
                                     {% endfor %}
                                 "
 
-                                data-base-points="{% for point in train.points %}{{ point.x + 100 }},{{ point.y }}{% if not loop.last %} {% endif %}{% endfor %}"
+                                data-base-points="{% for point in train.points %}{{ point.x + 64 }},{{ point.y }}{% if not loop.last %} {% endif %}{% endfor %}"
 
                                 data-train-index="{{ train_index }}"
                                 data-train-type="{{ train.train_type }}"
@@ -406,7 +253,7 @@
                                 data-train-type="{{ train.train_type }}"
                                 data-kobe-time="{{ train.kobe_time }}"
 
-                                data-base-x="{{ stop.x + 100 }}"
+                                data-base-x="{{ stop.x + 64 }}"
                                 data-station="{{ stop.station }}"
                                 data-arrival="{{ stop.arrival }}"
                                 data-departure="{{ stop.departure }}"
@@ -415,7 +262,7 @@
 
                                 transform="
                                     translate(
-                                        {{ stop.x + 100 }}
+                                        {{ stop.x + 64 }}
                                         {{ stop.y + (stop.offset_y or 0) }}
                                     )
                                 "
@@ -513,704 +360,34 @@
 
 
                 </svg>
-
-            </div>
-
-
+        </div>
+        <svg id="fixed-time-axis" aria-label="時刻"><g></g></svg>
+        <svg id="fixed-station-axis" aria-label="駅名"><g></g></svg>
+        <div class="axis-corner" aria-hidden="true"></div>
     {% endif %}
-
-
-
-    <!-- =====================================================
-         JavaScript
-         ===================================================== -->
-    <script>
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-
-                const svg =
-                    document.getElementById(
-                        "timetable-diagram"
-                    );
-
-
-                if (!svg) {
-                    return;
-                }
-
-
-                /* =============================================
-                   ズーム関連
-                   ============================================= */
-
-                const zoomLabel =
-                    document.getElementById(
-                        "zoom-label"
-                    );
-
-                const zoomInButton =
-                    document.getElementById(
-                        "zoom-in"
-                    );
-
-                const zoomOutButton =
-                    document.getElementById(
-                        "zoom-out"
-                    );
-
-                const zoomResetButton =
-                    document.getElementById(
-                        "zoom-reset"
-                    );
-
-
-                const leftMargin = 100;
-
-
-                const diagramWidth =
-                    Number(
-                        svg.dataset.diagramWidth
-                    );
-
-
-                const topMargin =
-                    Number(
-                        svg.dataset.topMargin
-                    );
-
-
-                const stationSpacing =
-                    Number(
-                        svg.dataset.stationSpacing
-                    );
-
-
-                const stationCount =
-                    Number(
-                        svg.dataset.stationCount
-                    );
-
-
-                let zoom = 1.0;
-
-                const minZoom = 1.0;
-                const maxZoom = 3.0;
-                const zoomStep = 0.25;
-
-
-                /* ピンチ操作 */
-                let pinchStartDistance = null;
-                let pinchStartZoom = 1.0;
-
-
-
-                function scaleX(baseX) {
-
-                    return (
-                        leftMargin
-                        + (baseX - leftMargin)
-                        * zoom
-                    );
-                }
-
-
-
-                function scaleY(baseY) {
-
-                    return (
-                        topMargin
-                        + (baseY - topMargin)
-                        * zoom
-                    );
-                }
-
-
-
-                function updateDiagram() {
-
-                    const newWidth =
-                        140
-                        + diagramWidth
-                        * zoom;
-
-
-                    const newHeight =
-                        (topMargin * 2)
-                        + (
-                            (stationCount - 1)
-                            * stationSpacing
-                            * zoom
-                        );
-
-
-                    svg.setAttribute(
-                        "width",
-                        newWidth
-                    );
-
-
-                    svg.setAttribute(
-                        "height",
-                        newHeight
-                    );
-
-
-                    svg.setAttribute(
-                        "viewBox",
-                        `0 0 ${newWidth} ${newHeight}`
-                    );
-
-
-                    /* 時間線 */
-                    svg.querySelectorAll(
-                        ".diagram-time-grid"
-                    ).forEach(
-                        function (line) {
-
-                            const x =
-                                scaleX(
-                                    Number(
-                                        line.dataset.baseX
-                                    )
-                                );
-
-                            line.setAttribute(
-                                "x1",
-                                x
-                            );
-
-                            line.setAttribute(
-                                "x2",
-                                x
-                            );
-
-                            line.setAttribute(
-                                "y2",
-                                newHeight - 20
-                            );
-                        }
-                    );
-
-
-                    /* 時刻表示 */
-                    svg.querySelectorAll(
-                        ".diagram-time-label"
-                    ).forEach(
-                        function (text) {
-
-                            const x =
-                                scaleX(
-                                    Number(
-                                        text.dataset.baseX
-                                    )
-                                );
-
-                            text.setAttribute(
-                                "x",
-                                x
-                            );
-                        }
-                    );
-
-
-                    /* 駅線 */
-                    svg.querySelectorAll(
-                        ".diagram-station-line"
-                    ).forEach(
-                        function (line) {
-
-                            const y =
-                                scaleY(
-                                    Number(
-                                        line.dataset.baseY
-                                    )
-                                );
-
-                            line.setAttribute(
-                                "y1",
-                                y
-                            );
-
-                            line.setAttribute(
-                                "y2",
-                                y
-                            );
-
-                            line.setAttribute(
-                                "x2",
-                                leftMargin
-                                + diagramWidth
-                                * zoom
-                            );
-                        }
-                    );
-
-
-                    /* 駅名 */
-                    svg.querySelectorAll(
-                        ".diagram-station-name"
-                    ).forEach(
-                        function (text) {
-
-                            const y =
-                                scaleY(
-                                    Number(
-                                        text.dataset.baseY
-                                    )
-                                );
-
-                            text.setAttribute(
-                                "y",
-                                y + 4
-                            );
-                        }
-                    );
-
-
-                    /* 希望時刻線 */
-                    const targetLine =
-                        svg.querySelector(
-                            ".diagram-target-line"
-                        );
-
-
-                    if (targetLine) {
-
-                        const x =
-                            scaleX(
-                                Number(
-                                    targetLine.dataset.baseX
-                                )
-                            );
-
-                        targetLine.setAttribute(
-                            "x1",
-                            x
-                        );
-
-                        targetLine.setAttribute(
-                            "x2",
-                            x
-                        );
-
-                        targetLine.setAttribute(
-                            "y2",
-                            newHeight - 20
-                        );
-                    }
-
-
-                    const targetLabel =
-                        svg.querySelector(
-                            ".diagram-target-label"
-                        );
-
-
-                    if (targetLabel) {
-
-                        const x =
-                            scaleX(
-                                Number(
-                                    targetLabel.dataset.baseX
-                                )
-                            );
-
-                        targetLabel.setAttribute(
-                            "x",
-                            x
-                        );
-                    }
-
-
-                    /* 列車線 */
-                    svg.querySelectorAll(
-                        ".diagram-train-line"
-                    ).forEach(
-                        function (line) {
-
-                            const basePoints =
-                                line
-                                    .dataset
-                                    .basePoints
-                                    .trim()
-                                    .split(/\s+/);
-
-
-                            const newPoints =
-                                basePoints.map(
-                                    function (point) {
-
-                                        const parts =
-                                            point.split(",");
-
-                                        const baseX =
-                                            Number(parts[0]);
-
-                                        const baseY =
-                                            Number(parts[1]);
-
-                                        return (
-                                            scaleX(baseX)
-                                            + ","
-                                            + scaleY(baseY)
-                                        );
-                                    }
-                                );
-
-
-                            line.setAttribute(
-                                "points",
-                                newPoints.join(" ")
-                            );
-                        }
-                    );
-
-
-                    /* 駅ボックス */
-                    svg.querySelectorAll(
-                        ".diagram-stop-box"
-                    ).forEach(
-                        function (box) {
-
-                            const baseX =
-                                Number(
-                                    box.dataset.baseX
-                                );
-
-                            const baseY =
-                                Number(
-                                    box.dataset.baseY
-                                );
-
-                            const offsetY =
-                                Number(
-                                    box.dataset.offsetY || 0
-                                );
-
-
-                            const x =
-                                scaleX(baseX);
-
-                            const y =
-                                scaleY(baseY)
-                                + offsetY;
-
-
-                            box.setAttribute(
-                                "transform",
-                                `translate(${x} ${y})`
-                            );
-                        }
-                    );
-
-
-                    zoomLabel.textContent =
-                        Math.round(
-                            zoom * 100
-                        )
-                        + "%";
-                    updateTransferLine();
-                }
-
-
-
-                zoomInButton.addEventListener(
-                    "click",
-                    function () {
-
-                        if (zoom < maxZoom) {
-
-                            zoom = Math.min(maxZoom, zoom + zoomStep);
-
-                            updateDiagram();
-                        }
-                    }
-                );
-
-
-
-                zoomOutButton.addEventListener(
-                    "click",
-                    function () {
-
-                        if (zoom > minZoom) {
-
-                            zoom = Math.max(minZoom, zoom - zoomStep);
-
-                            updateDiagram();
-                        }
-                    }
-                );
-
-
-
-                zoomResetButton.addEventListener(
-                    "click",
-                    function () {
-
-                        zoom = 1.0;
-
-                        updateDiagram();
-                    }
-                );
-
-
-
-                /* =============================================
-                   ピンチズーム
-                   ============================================= */
-
-                function getTouchDistance(
-                    touch1,
-                    touch2
-                ) {
-
-                    const dx =
-                        touch2.clientX
-                        - touch1.clientX;
-
-                    const dy =
-                        touch2.clientY
-                        - touch1.clientY;
-
-
-                    return Math.sqrt(
-                        dx * dx
-                        + dy * dy
-                    );
-                }
-
-
-
-                svg.addEventListener(
-                    "touchstart",
-                    function (event) {
-
-                        if (
-                            event.touches.length
-                            !== 2
-                        ) {
-                            return;
-                        }
-
-
-                        pinchStartDistance =
-                            getTouchDistance(
-                                event.touches[0],
-                                event.touches[1]
-                            );
-
-
-                        pinchStartZoom =
-                            zoom;
-                    },
-                    {
-                        passive: false
-                    }
-                );
-
-
-
-                svg.addEventListener(
-                    "touchmove",
-                    function (event) {
-
-                        if (
-                            event.touches.length
-                            !== 2
-                            ||
-                            pinchStartDistance
-                            === null
-                        ) {
-                            return;
-                        }
-
-
-                        event.preventDefault();
-
-
-                        const currentDistance =
-                            getTouchDistance(
-                                event.touches[0],
-                                event.touches[1]
-                            );
-
-
-                        const scale =
-                            currentDistance
-                            / pinchStartDistance;
-
-
-                        zoom =
-                            pinchStartZoom
-                            * scale;
-
-
-                        if (zoom < minZoom) {
-                            zoom = minZoom;
-                        }
-
-
-                        if (zoom > maxZoom) {
-                            zoom = maxZoom;
-                        }
-
-
-                        updateDiagram();
-                    },
-                    {
-                        passive: false
-                    }
-                );
-
-
-
-                svg.addEventListener(
-                    "touchend",
-                    function (event) {
-
-                        if (
-                            event.touches.length
-                            < 2
-                        ) {
-                            pinchStartDistance =
-                                null;
-                        }
-                    }
-                );
-
-
-
-                /* =============================================
-                   乗車中の列車選択
-                   ============================================= */
-
-                const selectedTrainPanel =
-                    document.getElementById(
-                        "selected-train-panel"
-                    );
-
-
-                const selectedTrainText =
-                    document.getElementById(
-                        "selected-train-text"
-                    );
-
-
-                const clearSelectedTrainButton =
-                    document.getElementById(
-                        "clear-selected-train"
-                    );
-
-
-                let selectedTrainIndex = null;
-                let transferSourceBox = null;
-                let transferTargetBox = null;
-                const transferPanel = document.getElementById("transfer-panel");
-                const transferText = document.getElementById("transfer-text");
-                const transferLine = document.getElementById("transfer-line");
-                const transferMessage = document.getElementById("transfer-message");
-
-                function updateSelection() {
-                    svg.querySelectorAll("[data-train-index]").forEach(function (element) {
-                        const selected = element.dataset.trainIndex === selectedTrainIndex;
-                        const candidate = transferTargetBox !== null
-                            && element.dataset.trainIndex === transferTargetBox.dataset.trainIndex;
-                        element.classList.toggle("is-selected", selected);
-                        element.classList.toggle("is-transfer", candidate);
-                        element.classList.toggle("is-dimmed",
-                            selectedTrainIndex !== null && !selected && !candidate);
-                        element.classList.toggle("is-transfer-stop",
-                            element === transferSourceBox || element === transferTargetBox);
-                    });
-                }
-
-                function updateTransferLine() {
-                    const visible = transferSourceBox !== null && transferTargetBox !== null;
-                    // SVGにはHTML要素のhiddenプロパティがないため属性を操作する。
-                    transferLine.toggleAttribute("hidden", !visible);
-                    if (!visible) return;
-                    [transferSourceBox, transferTargetBox].forEach(function (box, index) {
-                        transferLine.setAttribute("x" + (index + 1),
-                            scaleX(Number(box.dataset.baseX)));
-                        transferLine.setAttribute("y" + (index + 1),
-                            scaleY(Number(box.dataset.baseY)) + Number(box.dataset.offsetY || 0));
-                    });
-                }
-
-                function clearTransfer() {
-                    transferSourceBox = null;
-                    transferTargetBox = null;
-                    transferPanel.hidden = true;
-                    transferText.textContent = "";
-                    transferMessage.textContent = "";
-                    updateSelection();
-                    updateTransferLine();
-                }
-
-                function selectTrain(trainIndex, trainType, kobeTime) {
-                    selectedTrainIndex = String(trainIndex);
-                    clearTransfer();
-                    selectedTrainText.textContent = trainType + " ／ 神戸 " + kobeTime;
-                    selectedTrainPanel.hidden = false;
-                }
-
-                function clearSelectedTrain() {
-                    selectedTrainIndex = null;
-                    clearTransfer();
-                    selectedTrainPanel.hidden = true;
-                    selectedTrainText.textContent = "";
-                }
-
-                function selectTransfer(targetBox) {
-                    const sourceBox = Array.from(svg.querySelectorAll(".diagram-stop-box"))
-                        .find(function (box) {
-                            return box.dataset.trainIndex === selectedTrainIndex
-                                && box.dataset.station === targetBox.dataset.station;
-                        });
-                    if (!sourceBox) {
-                        clearTransfer();
-                        transferMessage.textContent = "乗車中の列車には「"
-                            + targetBox.dataset.station + "」の駅箱がないため、選択できません。";
-                        return;
-                    }
-                    transferSourceBox = sourceBox;
-                    transferTargetBox = targetBox;
-                    transferText.textContent = targetBox.dataset.station + " ／ "
-                        + targetBox.dataset.trainType + " ／ 神戸 " + targetBox.dataset.kobeTime
-                        + "（乗車中：着 " + (sourceBox.dataset.arrival || "—")
-                        + "・発 " + (sourceBox.dataset.departure || "—")
-                        + " → 候補：発 " + (targetBox.dataset.departure || "—") + "）";
-                    transferPanel.hidden = false;
-                    transferMessage.textContent = "手動で選んだ候補です。乗換可否は判定していません。";
-                    updateSelection();
-                    updateTransferLine();
-                }
-
-                svg.addEventListener("click", function (event) {
-                    const element = event.target.closest("[data-train-index]");
-                    if (!element) return;
-                    if (selectedTrainIndex !== null
-                        && element.classList.contains("diagram-stop-box")
-                        && element.dataset.trainIndex !== selectedTrainIndex) {
-                        selectTransfer(element);
-                    } else {
-                        selectTrain(element.dataset.trainIndex,
-                            element.dataset.trainType, element.dataset.kobeTime);
-                    }
-                });
-
-                clearSelectedTrainButton.addEventListener("click", clearSelectedTrain);
-                document.getElementById("clear-transfer").addEventListener("click", clearTransfer);
-
-            }
-        );
-
-    </script>
-
-
+    </main>
+    <button id="menu-button" type="button" aria-label="メニューを開く" aria-controls="control-sheet" aria-expanded="false">☰</button>
+    <dialog id="control-sheet" aria-label="ダイヤの操作">
+        <div class="sheet-heading"><span>ダイヤ</span><button id="close-sheet" type="button" aria-label="閉じる">×</button></div>
+        <form method="POST" id="search-form">
+            <fieldset class="direction-segment" aria-label="行き・帰り">
+                <label><input type="radio" name="direction" value="outbound" {% if direction == 'outbound' %}checked{% endif %}><span>行き</span></label>
+                <label><input type="radio" name="direction" value="return" {% if direction == 'return' %}checked{% endif %}><span>帰り</span></label>
+            </fieldset>
+            <label class="time-field" for="target_time">指定時刻
+                <input type="time" id="target_time" name="target_time" value="{{ target_time }}" required>
+            </label>
+            {% if error_message %}<p class="error-message" role="alert">{{ error_message }}</p>{% endif %}
+            <button class="search-button" type="submit">ダイヤを表示</button>
+        </form>
+        <div class="diagram-zoom-controls" aria-label="ズーム">
+            <button type="button" id="zoom-out" aria-label="縮小" {% if not selected_trains %}disabled{% endif %}>－</button>
+            <span id="zoom-label">100%</span>
+            <button type="button" id="zoom-in" aria-label="拡大" {% if not selected_trains %}disabled{% endif %}>＋</button>
+            <button type="button" id="zoom-reset" {% if not selected_trains %}disabled{% endif %}>リセット</button>
+        </div>
+    </dialog>
+    <script src="{{ url_for('static', filename='controls.js') }}"></script>
+    <script src="{{ url_for('static', filename='diagram.js') }}"></script>
 </body>
-
 </html>

@@ -1,0 +1,30 @@
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button, input { font: inherit; }
+button { min-width: 44px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 3px solid #2f6fed; outline-offset: 2px; }
+.diagram-viewport { position: relative; width: 100%; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top); }
+.new-diagram-scroll { position: absolute; inset: env(safe-area-inset-top) 0 0; width: 100%; overflow: auto; border: 0; overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
+.new-diagram .diagram-time-label, .new-diagram .diagram-station-name { visibility: hidden; }
+#fixed-time-axis, #fixed-station-axis { position: absolute; pointer-events: none; background: white; overflow: hidden; }
+#fixed-time-axis { top: env(safe-area-inset-top); left: 0; width: 100%; height: 30px; z-index: 3; border-bottom: 1px solid #ddd; }
+#fixed-station-axis { top: env(safe-area-inset-top); left: 0; width: 64px; height: calc(100% - env(safe-area-inset-top)); z-index: 2; border-right: 1px solid #ddd; }
+.axis-corner { position: absolute; top: env(safe-area-inset-top); left: 0; width: 64px; height: 30px; background: white; z-index: 4; }
+#menu-button { position: fixed; right: calc(16px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 5; width: 56px; height: 56px; border: 0; border-radius: 50%; background: #202c3b; color: white; font-size: 24px; box-shadow: 0 3px 14px #0003; }
+#control-sheet { position: fixed; inset: auto 0 0; margin: 0; width: 100%; max-width: none; max-height: 85vh; max-height: 85dvh; overflow-y: auto; padding: 12px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); border: 0; border-radius: 20px 20px 0 0; background: #f8fafc; color: #202c3b; box-shadow: 0 -6px 30px #0002; }
+#control-sheet::backdrop { background: #15202d66; }
+.sheet-heading { display: flex; align-items: center; justify-content: space-between; font-weight: 700; margin-bottom: 8px; }
+#close-sheet { background: transparent; border: 0; font-size: 28px; }
+.direction-segment { display: flex; margin: 0 0 16px; padding: 4px; border: 0; border-radius: 12px; background: #e4e9ef; }
+.direction-segment label { flex: 1; position: relative; }
+.direction-segment input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.direction-segment span { display: grid; place-items: center; min-height: 44px; border-radius: 9px; }
+.direction-segment input:checked + span { background: white; box-shadow: 0 1px 4px #0002; font-weight: 700; }
+.direction-segment input:focus-visible + span { outline: 3px solid #2f6fed; }
+.time-field { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+#target_time { box-sizing: border-box; min-width: 0; width: 160px; min-height: 48px; border: 1px solid #bac4d0; border-radius: 10px; background: white; padding: 8px 12px; font-size: 20px; }
+.search-button { width: 100%; margin: 16px 0; border: 0; border-radius: 12px; background: #202c3b; color: white; font-weight: 700; min-height: 48px; }
+.diagram-zoom-controls { display: flex; gap: 8px; margin: 0; }
+.diagram-zoom-controls button { min-height: 44px; flex: 1; border: 1px solid #bac4d0; border-radius: 10px; background: white; }
+.diagram-zoom-controls button:disabled { opacity: .4; }
+#zoom-label { font-variant-numeric: tabular-nums; }
