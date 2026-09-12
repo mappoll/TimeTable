@@ -438,7 +438,20 @@
                    ピンチズーム
                    ============================================= */
 
-                svg.addEventListener("touchcancel", function () { pinchStartDistance = null; });
+                let pinchAnchor = null;
+                function endPinch() {
+                    if (pinchAnchor) suppressClickUntil = Date.now() + 500;
+                    pinchStartDistance = null;
+                    pinchAnchor = null;
+                }
+                svg.addEventListener("touchcancel", endPinch);
+
+                function getTouchMidpoint(touches) {
+                    return {
+                        x: (touches[0].clientX + touches[1].clientX) / 2,
+                        y: (touches[0].clientY + touches[1].clientY) / 2
+                    };
+                }
 
                 function getTouchDistance(
                     touch1,
@@ -470,6 +483,7 @@
                             event.touches.length
                             !== 2
                         ) {
+                            endPinch();
                             return;
                         }
 
@@ -485,6 +499,18 @@
 
                         pinchStartZoom =
                             zoom;
+                        if (pinchStartDistance <= 0) {
+                            endPinch();
+                            return;
+                        }
+                        const midpoint = getTouchMidpoint(event.touches);
+                        const rect = svg.getBoundingClientRect();
+                        // SVGの画面位置には現在の縦横スクロールが含まれる。
+                        // scaleX / scaleYの逆変換で開始時の基準座標を保持する。
+                        pinchAnchor = {
+                            x: leftMargin + (midpoint.x - rect.left - leftMargin) / zoom,
+                            y: topMargin + (midpoint.y - rect.top - topMargin) / zoom
+                        };
                     },
                     {
                         passive: false
@@ -540,6 +566,12 @@
 
 
                         updateDiagram();
+                        const midpoint = getTouchMidpoint(event.touches);
+                        const rect = svg.getBoundingClientRect();
+                        // 同じ地点を現在の指の中間点へ戻す。中間点の移動も追従する。
+                        scroller.scrollLeft += rect.left + scaleX(pinchAnchor.x) - midpoint.x;
+                        scroller.scrollTop += rect.top + scaleY(pinchAnchor.y) - midpoint.y;
+                        syncAxes();
                     },
                     {
                         passive: false
@@ -556,8 +588,7 @@
                             event.touches.length
                             < 2
                         ) {
-                            pinchStartDistance =
-                                null;
+                            endPinch();
                         }
                     }
                 );
