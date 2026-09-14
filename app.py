@@ -1,4 +1,7 @@
 from flask import Flask, render_template, request
+from pathlib import Path
+from dotenv import load_dotenv
+from auth import init_auth
 
 from timetable_service import (
     load_trains,
@@ -15,9 +18,6 @@ from timetable_service import (
     build_train_diagram_stops,
     stack_overlapping_stops,
 )
-
-
-app = Flask(__name__)
 
 
 # =========================================================
@@ -86,7 +86,6 @@ OUTBOUND_STATIONS = [
 RETURN_STATIONS = list(reversed(OUTBOUND_STATIONS))
 
 
-@app.route("/", methods=["GET", "POST"])
 def index():
 
     # =====================================================
@@ -424,5 +423,15 @@ def index():
     )
 
 
+def create_app():
+    load_dotenv(Path(__file__).with_name(".env"), override=False, encoding="utf-8-sig")
+    application = Flask(__name__)
+    init_auth(application)
+    application.add_url_rule("/", "index", index, methods=["GET", "POST"])
+    return application
+
+
+app = create_app()
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

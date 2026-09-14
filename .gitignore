@@ -11,6 +11,11 @@ venv/
 
 # 環境変数・秘密情報
 .env
+.env.*
+!.env.example
+*.db
+*.db-*
+*.sqlite*
 
 # Pythonテスト等
 .pytest_cache/

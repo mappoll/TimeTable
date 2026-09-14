@@ -1,7 +1,10 @@
 import unittest
+import os
 from unittest.mock import patch
 
-from app import app, RETURN_STATIONS
+with patch.dict(os.environ, {"TIMETABLE_AUTH_ENABLED": "0"}):
+    from app import create_app, RETURN_STATIONS
+    app = create_app()
 from timetable_service import (
     build_train_diagram_points, build_train_diagram_stops,
     calculate_timeline_range, generate_time_ticks, return_time_to_minutes,
@@ -33,7 +36,7 @@ class ReturnDiagramTest(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn('id="timetable-diagram"', html)
         self.assertIn("希望出発 18:00", html)
-        self.assertIn('data-base-x="48"', html)
+        self.assertIn('data-base-x="18"', html)
         self.assertLess(html.index('data-station="神戸"'), html.index('data-station="茨木"'))
 
     def test_real_data_evening_midnight_and_outbound_render(self):

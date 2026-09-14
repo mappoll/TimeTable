@@ -26,23 +26,13 @@
                         "zoom-label"
                     );
 
-                const zoomInButton =
-                    document.getElementById(
-                        "zoom-in"
-                    );
-
-                const zoomOutButton =
-                    document.getElementById(
-                        "zoom-out"
-                    );
-
                 const selectionResetButton =
                     document.getElementById(
                         "selection-reset"
                     );
 
 
-                const leftMargin = Number(svg.dataset.leftAxisWidth);
+                const leftMargin = Number(svg.dataset.diagramLeftPadding);
 
 
                 const diagramWidth =
@@ -73,7 +63,6 @@
 
                 const minZoom = 1.0;
                 const maxZoom = 3.0;
-                const zoomStep = 0.25;
 
 
                 /* ピンチ操作 */
@@ -225,27 +214,6 @@
                     );
 
 
-                    /* 駅名 */
-                    svg.querySelectorAll(
-                        ".diagram-station-name"
-                    ).forEach(
-                        function (text) {
-
-                            const y =
-                                scaleY(
-                                    Number(
-                                        text.dataset.baseY
-                                    )
-                                );
-
-                            text.setAttribute(
-                                "y",
-                                y + 4
-                            );
-                        }
-                    );
-
-
                     /* 希望時刻線 */
                     const targetLine =
                         svg.querySelector(
@@ -391,36 +359,6 @@
                     updateTransferLine();
                     syncAxes();
                 }
-
-
-
-                zoomInButton.addEventListener(
-                    "click",
-                    function () {
-
-                        if (zoom < maxZoom) {
-
-                            zoom = Math.min(maxZoom, zoom + zoomStep);
-
-                            updateDiagram();
-                        }
-                    }
-                );
-
-
-
-                zoomOutButton.addEventListener(
-                    "click",
-                    function () {
-
-                        if (zoom > minZoom) {
-
-                            zoom = Math.max(minZoom, zoom - zoomStep);
-
-                            updateDiagram();
-                        }
-                    }
-                );
 
 
 
@@ -688,16 +626,11 @@
 
                 const scroller = document.querySelector(".new-diagram-scroll");
                 const timeLayer = document.querySelector("#fixed-time-axis g");
-                const stationLayer = document.querySelector("#fixed-station-axis g");
                 const timeLabels = Array.from(svg.querySelectorAll(".diagram-time-label"));
-                const stationLabels = Array.from(svg.querySelectorAll(".diagram-station-name"));
                 const timeCopies = timeLabels.map(label => timeLayer.appendChild(label.cloneNode(true)));
-                const stationCopies = stationLabels.map(label => stationLayer.appendChild(label.cloneNode(true)));
                 function syncAxes() {
                     timeLabels.forEach((label, i) => timeCopies[i].setAttribute("x", label.getAttribute("x")));
-                    stationLabels.forEach((label, i) => stationCopies[i].setAttribute("y", label.getAttribute("y")));
                     timeLayer.setAttribute("transform", `translate(${-scroller.scrollLeft} 0)`);
-                    stationLayer.setAttribute("transform", `translate(0 ${-scroller.scrollTop})`);
                 }
                 scroller.addEventListener("scroll", syncAxes, {passive: true});
                 updateDiagram();

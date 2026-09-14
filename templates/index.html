@@ -1,4 +1,4 @@
-{% set LEFT_AXIS_WIDTH = 48 %}
+{% set DIAGRAM_LEFT_PADDING = 18 %}
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -19,7 +19,7 @@
 </head>
 
 
-<body style="--left-axis-width: {{ LEFT_AXIS_WIDTH }}px" data-request-method="{{ request.method }}" data-has-diagram="{{ 'true' if selected_trains else 'false' }}">
+<body data-request-method="{{ request.method }}" data-has-diagram="{{ 'true' if selected_trains else 'false' }}">
     <main class="diagram-viewport" aria-label="{{ '希望到着' if direction == 'outbound' else '希望出発' }} {{ target_time }}">
     {% if selected_trains %}
         <div class="new-diagram-scroll" tabindex="0" aria-label="ダイヤをスクロール">
@@ -27,17 +27,17 @@
                     id="timetable-diagram"
                     class="new-diagram"
 
-                    width="{{ diagram_width + LEFT_AXIS_WIDTH + 40 }}"
+                    width="{{ diagram_width + DIAGRAM_LEFT_PADDING + 40 }}"
                     height="{{ diagram_height }}"
 
                     viewBox="
                         0
                         0
-                        {{ diagram_width + LEFT_AXIS_WIDTH + 40 }}
+                        {{ diagram_width + DIAGRAM_LEFT_PADDING + 40 }}
                         {{ diagram_height }}
                     "
 
-                    data-left-axis-width="{{ LEFT_AXIS_WIDTH }}"
+                    data-diagram-left-padding="{{ DIAGRAM_LEFT_PADDING }}"
                     data-diagram-width="{{ diagram_width }}"
                     data-top-margin="{{ diagram_top_margin }}"
                     data-station-spacing="{{ diagram_station_spacing }}"
@@ -51,7 +51,7 @@
                     {% for tick in time_ticks %}
 
                         {% set tick_x =
-                            LEFT_AXIS_WIDTH
+                            DIAGRAM_LEFT_PADDING
                             + (tick.minutes - diagram_start_minutes)
                             * diagram_pixels_per_minute
                         %}
@@ -97,10 +97,10 @@
                         %}
 
                         <line
-                            x1="{{ LEFT_AXIS_WIDTH }}"
+                            x1="{{ DIAGRAM_LEFT_PADDING }}"
                             y1="{{ station_y }}"
 
-                            x2="{{ LEFT_AXIS_WIDTH + diagram_width }}"
+                            x2="{{ DIAGRAM_LEFT_PADDING + diagram_width }}"
                             y2="{{ station_y }}"
 
                             data-base-y="{{ station_y }}"
@@ -109,18 +109,6 @@
                         />
 
 
-                        <text
-                            x="{{ LEFT_AXIS_WIDTH - 5 }}"
-                            y="{{ station_y + 4 }}"
-
-                            data-base-y="{{ station_y }}"
-
-                            text-anchor="end"
-
-                            class="diagram-station-name"
-                        >
-                            {{ station.name }}
-                        </text>
 
                     {% endfor %}
 
@@ -132,7 +120,7 @@
                           and diagram_target_x is not none %}
 
                         {% set target_x =
-                            diagram_target_x + LEFT_AXIS_WIDTH
+                            diagram_target_x + DIAGRAM_LEFT_PADDING
                         %}
 
                         <line
@@ -196,11 +184,11 @@
                             <polyline
                                 points="
                                     {% for point in train.points %}
-                                        {{ point.x + LEFT_AXIS_WIDTH }},{{ point.y }}
+                                        {{ point.x + DIAGRAM_LEFT_PADDING }},{{ point.y }}
                                     {% endfor %}
                                 "
 
-                                data-base-points="{% for point in train.points %}{{ point.x + LEFT_AXIS_WIDTH }},{{ point.y }}{% if not loop.last %} {% endif %}{% endfor %}"
+                                data-base-points="{% for point in train.points %}{{ point.x + DIAGRAM_LEFT_PADDING }},{{ point.y }}{% if not loop.last %} {% endif %}{% endfor %}"
 
                                 data-train-index="{{ train_index }}"
                                 data-train-type="{{ train.train_type }}"
@@ -255,7 +243,7 @@
                                 data-train-type="{{ train.train_type }}"
                                 data-kobe-time="{{ train.kobe_time }}"
 
-                                data-base-x="{{ stop.x + LEFT_AXIS_WIDTH }}"
+                                data-base-x="{{ stop.x + DIAGRAM_LEFT_PADDING }}"
                                 data-station="{{ stop.station }}"
                                 data-arrival="{{ stop.arrival }}"
                                 data-departure="{{ stop.departure }}"
@@ -264,7 +252,7 @@
 
                                 transform="
                                     translate(
-                                        {{ stop.x + LEFT_AXIS_WIDTH }}
+                                        {{ stop.x + DIAGRAM_LEFT_PADDING }}
                                         {{ stop.y + (stop.offset_y or 0) }}
                                     )
                                 "
@@ -364,15 +352,11 @@
                 </svg>
         </div>
         <svg id="fixed-time-axis" aria-label="時刻"><g></g></svg>
-        <svg id="fixed-station-axis" aria-label="駅名"><g></g></svg>
-        <div class="axis-corner" aria-hidden="true"></div>
     {% endif %}
     </main>
     <div class="floating-controls" role="group" aria-label="ダイヤ操作">
-        <button type="button" id="zoom-out" aria-label="縮小" {% if not selected_trains %}disabled{% endif %}>－</button>
-        <span id="zoom-label" aria-live="polite">100%</span>
-        <button type="button" id="zoom-in" aria-label="拡大" {% if not selected_trains %}disabled{% endif %}>＋</button>
         <button type="button" id="selection-reset" aria-label="列車選択と乗換候補をリセット" title="列車選択を解除" {% if not selected_trains %}disabled{% endif %}>リセット</button>
+        <span id="zoom-label" aria-live="polite">100%</span>
         <button id="menu-button" type="button" aria-label="メニューを開く" aria-controls="control-sheet" aria-expanded="false">☰</button>
     </div>
     <dialog id="control-sheet" aria-label="ダイヤの操作">
@@ -388,6 +372,12 @@
             {% if error_message %}<p class="error-message" role="alert">{{ error_message }}</p>{% endif %}
             <button class="search-button" type="submit">ダイヤを表示</button>
         </form>
+        {% if config.AUTH_ENABLED %}
+        <form method="POST" action="{{ url_for('auth.logout') }}" class="logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">ログアウト</button>
+        </form>
+        {% endif %}
     </dialog>
     <script src="{{ url_for('static', filename='controls.js') }}"></script>
     <script src="{{ url_for('static', filename='diagram.js') }}"></script>

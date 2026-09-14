@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>TimeTable — パスキー</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+</head>
+<body>
+<main>
+    <h1>TimeTable</h1>
+    {% if mode == 'login' %}
+    <button id="passkey-button" type="button" data-mode="login"
+            data-options-url="{{ url_for('auth.authentication_options') }}"
+            data-verify-url="{{ url_for('auth.authentication_verify') }}">Face ID / パスキーでログイン</button>
+    {% elif mode == 'register' %}
+    <p>この端末でTimeTableのパスキーを登録します。</p>
+    <button id="passkey-button" type="button" data-mode="register"
+            data-options-url="{{ url_for('auth.registration_options') }}"
+            data-verify-url="{{ url_for('auth.registration_verify') }}">パスキーを登録</button>
+    {% elif mode == 'setup' %}
+    <p>初回パスキー登録</p>
+    <form method="POST" action="{{ url_for('auth.setup') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="setup-token">セットアップトークン</label>
+        <input id="setup-token" name="setup_token" type="password" autocomplete="off" required>
+        <button type="submit">登録へ進む</button>
+    </form>
+    {% endif %}
+    <p id="auth-message" role="status" aria-live="polite">{{ message or '' }}</p>
+    {% if mode != 'login' %}<a href="{{ url_for('auth.login') }}">ログインへ</a>{% endif %}
+</main>
+<script src="{{ url_for('static', filename='auth.js') }}"></script>
+</body>
+</html>
