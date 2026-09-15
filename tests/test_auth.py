@@ -19,10 +19,17 @@ class AuthenticationTest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.path = str(Path(self.directory.name) / "auth.db")
-        self.env = {"TIMETABLE_AUTH_ENABLED": "1", "TIMETABLE_AUTH_DB_PATH": self.path,
-                    "SECRET_KEY": "test-only-secret-" * 4, "PASSKEY_SETUP_TOKEN": "test-only-setup-" * 4,
-                    "WEBAUTHN_RP_ID": "example.com", "WEBAUTHN_ORIGIN": "https://example.com",
-                    "TIMETABLE_SESSION_COOKIE_PATH": "/", "TIMETABLE_SESSION_HOURS": "16"}
+        self.env = {
+            "TIMETABLE_AUTH_ENABLED": "1",
+            "TIMETABLE_SETUP_ENABLED": "1",
+            "TIMETABLE_AUTH_DB_PATH": self.path,
+            "SECRET_KEY": "test-only-secret-" * 4,
+            "PASSKEY_SETUP_TOKEN": "test-only-setup-" * 4,
+            "WEBAUTHN_RP_ID": "example.com",
+            "WEBAUTHN_ORIGIN": "https://example.com",
+            "TIMETABLE_SESSION_COOKIE_PATH": "/",
+            "TIMETABLE_SESSION_HOURS": "16",
+        }
         self.app = self.make_app()
         self.client = self.app.test_client()
 
@@ -131,12 +138,66 @@ class AuthenticationTest(unittest.TestCase):
         self.assertEqual(32, len(first))
         self.seed()
         self.app = None
-        app2 = self.make_app(removed=("PASSKEY_SETUP_TOKEN",))
+        app2 = self.make_app(
+            {"TIMETABLE_SETUP_ENABLED": "0"},
+            removed=("PASSKEY_SETUP_TOKEN",),
+        )
         with database(app2.config["AUTH_DB_PATH"]) as db:
             self.assertEqual(first, db.execute("SELECT user_handle FROM auth_owner").fetchone()[0])
         self.assertEqual([(b"test-credential", b"test-public-key", 7)], self.rows())
         self.client = app2.test_client()
         self.assertEqual(200, self.post("/auth/login/options").status_code)
+
+    def test_setup_disabled_blocks_registration_even_when_database_is_empty(self):
+        app = self.make_app({"TIMETABLE_SETUP_ENABLED": "0"})
+        client = app.test_client()
+
+        response = client.get(
+            "/setup",
+            base_url="https://example.com",
+        )
+
+        self.assertEqual(403, response.status_code)
+
+        with patch("auth.generate_registration_options") as generate:
+            with client.session_transaction(
+                    base_url="https://example.com"
+            ) as session:
+                session["csrf_token"] = "test-csrf"
+
+            response = client.post(
+                "/auth/register/options",
+                base_url="https://example.com",
+                headers={
+                    "X-CSRF-Token": "test-csrf",
+                    "Origin": "https://example.com",
+                },
+            )
+
+        self.assertEqual(403, response.status_code)
+        generate.assert_not_called()
+
+    def test_setup_disabled_does_not_disable_normal_login(self):
+        self.seed()
+
+        app = self.make_app({"TIMETABLE_SETUP_ENABLED": "0"})
+        client = app.test_client()
+
+        with client.session_transaction(
+                base_url="https://example.com"
+        ) as session:
+            session["csrf_token"] = "test-csrf"
+
+        response = client.post(
+            "/auth/login/options",
+            base_url="https://example.com",
+            headers={
+                "X-CSRF-Token": "test-csrf",
+                "Origin": "https://example.com",
+            },
+        )
+
+        self.assertEqual(200, response.status_code)
 
     def test_setup_closed_after_registration_for_get_post_and_api(self):
         self.authorize_setup()

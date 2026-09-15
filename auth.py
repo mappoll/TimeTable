@@ -49,12 +49,23 @@ def init_auth(app):
         return
 
     secret = os.environ.get("SECRET_KEY", "")
+
     if len(secret) < 32:
         raise RuntimeError("SECRET_KEY must be set to a random value of at least 32 characters")
+    setup_enabled = os.environ.get("TIMETABLE_SETUP_ENABLED", "0") == "1"
     setup_token = os.environ.get("PASSKEY_SETUP_TOKEN", "")
+
     if setup_token and len(setup_token) < 32:
         raise RuntimeError("PASSKEY_SETUP_TOKEN must be empty or a random value of at least 32 characters")
+
+    if setup_enabled and not setup_token:
+        raise RuntimeError(
+            "PASSKEY_SETUP_TOKEN is required when TIMETABLE_SETUP_ENABLED=1"
+        )
+
     db_value = os.environ.get("TIMETABLE_AUTH_DB_PATH", "")
+
+
     if not db_value or not Path(db_value).is_absolute():
         raise RuntimeError("TIMETABLE_AUTH_DB_PATH must be an absolute external file path")
     db_path = Path(db_value).resolve()
@@ -84,7 +95,7 @@ def init_auth(app):
     except ValueError:
         raise RuntimeError("TIMETABLE_SESSION_HOURS must be positive and at most 8760") from None
     app.config.update(SECRET_KEY=secret, AUTH_DB_PATH=str(db_path), WEBAUTHN_RP_ID=rp_id,
-                      WEBAUTHN_ORIGIN=origin, PASSKEY_SETUP_TOKEN=setup_token,
+                      WEBAUTHN_ORIGIN=origin, PASSKEY_SETUP_TOKEN=setup_token,SETUP_ENABLED=setup_enabled,
                       SESSION_COOKIE_NAME="timetable_session", SESSION_COOKIE_SECURE=True,
                       SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
                       SESSION_COOKIE_PATH=cookie_path, PERMANENT_SESSION_LIFETIME=timedelta(hours=hours),
@@ -157,9 +168,14 @@ def has_credentials(db):
 
 def setup_allowed():
     issued = session.get("setup_authorized_at", 0)
+
     with database() as db:
-        return (bool(current_app.config["PASSKEY_SETUP_TOKEN"]) and
-                0 <= time.time() - issued < CEREMONY_SECONDS and not has_credentials(db))
+        return (
+            current_app.config["SETUP_ENABLED"]
+            and bool(current_app.config["PASSKEY_SETUP_TOKEN"])
+            and 0 <= time.time() - issued < CEREMONY_SECONDS
+            and not has_credentials(db)
+        )
 
 
 def save_challenge(challenge, kind):
@@ -207,6 +223,12 @@ def login():
 
 @auth.route("/setup", methods=["GET", "POST"])
 def setup():
+    if not current_app.config["SETUP_ENABLED"]:
+        return render_template(
+            "auth.html",
+            mode="closed",
+            message="Passkeyのセットアップは無効です。",
+        ), 403
     with database() as db:
         if has_credentials(db):
             return render_template("auth.html", mode="closed", message="Passkeyは登録済みです。ログインしてください。"), 403
