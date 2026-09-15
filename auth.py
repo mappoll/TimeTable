@@ -65,12 +65,18 @@ def init_auth(app):
 
     db_value = os.environ.get("TIMETABLE_AUTH_DB_PATH", "")
 
+    if not db_value:
+        raise RuntimeError(
+            "TIMETABLE_AUTH_DB_PATH must be configured"
+        )
 
-    if not db_value or not Path(db_value).is_absolute():
-        raise RuntimeError("TIMETABLE_AUTH_DB_PATH must be an absolute external file path")
-    db_path = Path(db_value).resolve()
-    if db_path.is_relative_to(Path(app.root_path).resolve()):
-        raise RuntimeError("TIMETABLE_AUTH_DB_PATH must be outside the source directory")
+    db_path = Path(db_value)
+
+    if not db_path.is_absolute():
+        db_path = Path(app.root_path) / db_path
+
+    db_path = db_path.resolve()
+
     if not db_path.parent.is_dir():
         raise RuntimeError("TIMETABLE_AUTH_DB_PATH parent directory must already exist")
 
@@ -103,20 +109,49 @@ def init_auth(app):
     try:
         with database(str(db_path)) as db:
             db.execute("BEGIN IMMEDIATE")
+
             db.execute("""CREATE TABLE IF NOT EXISTS auth_owner (
-                id INTEGER PRIMARY KEY CHECK(id = 1), user_handle BLOB NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
+                id INTEGER PRIMARY KEY CHECK(id = 1),
+                user_handle BLOB NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+
             db.execute("""CREATE TABLE IF NOT EXISTS credentials (
-                id INTEGER PRIMARY KEY, credential_id BLOB NOT NULL UNIQUE,
-                credential_public_key BLOB NOT NULL, sign_count INTEGER NOT NULL,
-                transports TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
+                id INTEGER PRIMARY KEY,
+                credential_id BLOB NOT NULL UNIQUE,
+                credential_public_key BLOB NOT NULL,
+                sign_count INTEGER NOT NULL,
+                transports TEXT NOT NULL DEFAULT '[]',
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )""")
+
             db.execute("""CREATE TABLE IF NOT EXISTS auth_challenges (
-                digest BLOB PRIMARY KEY, expires_at REAL NOT NULL)""")
-            db.execute("INSERT OR IGNORE INTO auth_owner (id, user_handle) VALUES (1, ?)", (secrets.token_bytes(32),))
+                digest BLOB PRIMARY KEY,
+                expires_at REAL NOT NULL
+            )""")
+
+            db.execute(
+                "INSERT OR IGNORE INTO auth_owner (id, user_handle) VALUES (1, ?)",
+                (secrets.token_bytes(32),)
+            )
+
             # A write transaction also verifies directory/journal permissions on each startup.
-            db.execute("DELETE FROM auth_challenges WHERE expires_at < ?", (time.time(),))
+            db.execute(
+                "DELETE FROM auth_challenges WHERE expires_at < ?",
+                (time.time(),)
+            )
+
+            # セットアップ無効時に登録済みPasskeyが存在しなければ起動しない
+            if not setup_enabled and not has_credentials(db):
+                raise RuntimeError(
+                    "No registered Passkey is available while setup is disabled"
+                )
+
     except (sqlite3.Error, OSError):
-        raise RuntimeError("Authentication DB initialization failed; check file and parent read/write permissions") from None
+        raise RuntimeError(
+            "Authentication DB initialization failed; "
+            "check file and parent read/write permissions"
+        ) from None
 
 
 def is_authenticated():

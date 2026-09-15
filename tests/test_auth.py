@@ -119,12 +119,42 @@ class AuthenticationTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "SECRET_KEY"):
             self.make_app(removed=("SECRET_KEY",))
 
-    def test_invalid_db_paths_fail_without_creating_parent(self):
-        missing = Path(self.directory.name) / "missing" / "auth.db"
-        for path in ["auth.db", str(Path(__file__).resolve().parents[1] / "auth.db"), str(missing)]:
-            with self.subTest(path=path), self.assertRaises(RuntimeError):
-                self.make_app({"TIMETABLE_AUTH_DB_PATH": path})
-        self.assertFalse(missing.parent.exists())
+    def test_relative_db_path_is_resolved_from_app_root(self):
+        app = self.make_app(
+            {"TIMETABLE_AUTH_DB_PATH": "test-auth.db"}
+        )
+
+        expected = Path(app.root_path) / "test-auth.db"
+
+        self.assertEqual(
+            str(expected.resolve()),
+            app.config["AUTH_DB_PATH"],
+        )
+
+        expected.unlink(missing_ok=True)
+
+    def test_setup_disabled_without_registered_credential_fails_startup(self):
+        with self.assertRaisesRegex(
+                RuntimeError,
+                "No registered Passkey"
+        ):
+            self.make_app(
+                {"TIMETABLE_SETUP_ENABLED": "0"}
+            )
+
+    def test_setup_disabled_without_registered_credential_fails_startup(self):
+        empty_db = str(
+            Path(self.directory.name) / "empty-auth.db"
+        )
+
+        with self.assertRaisesRegex(
+                RuntimeError,
+                "No registered Passkey"
+        ):
+            self.make_app({
+                "TIMETABLE_AUTH_DB_PATH": empty_db,
+                "TIMETABLE_SETUP_ENABLED": "0",
+            })
 
     def test_db_permission_failure_is_clear_without_path_disclosure(self):
         with patch("auth.sqlite3.connect", side_effect=sqlite3.OperationalError("sensitive path")):
@@ -148,7 +178,11 @@ class AuthenticationTest(unittest.TestCase):
         self.client = app2.test_client()
         self.assertEqual(200, self.post("/auth/login/options").status_code)
 
-    def test_setup_disabled_blocks_registration_even_when_database_is_empty(self):
+    def test_setup_disabled_blocks_registration_with_registered_credential(self):
+        # 先に登録済みPasskeyを作る
+        self.seed()
+
+        # セットアップを無効にした状態で再起動
         app = self.make_app({"TIMETABLE_SETUP_ENABLED": "0"})
         client = app.test_client()
 
